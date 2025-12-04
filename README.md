@@ -30,4 +30,64 @@ Volunteer (Gatekeeper)
 ● Scanner Interface: Accesses a mobile-friendly scanner (Web or App). ● 
 Verification: Scans the Attendee's QR code.  
 ● Action: System returns "Allowed" (Green) or "Duplicate/Invalid" (Red).  
-● Check-in: Marks the attendee as "Present" to prevent re-entry with the same code. 
+● Check-in: Marks the attendee as "Present" to prevent re-entry with the same code.
+
+
+
+event-system/
+│
+├── backend/
+│   ├── src/
+│   │   ├── config/
+│   │   │   ├── db.ts
+│   │   │   └── env.ts
+│   │   │
+│   │   ├── models/
+│   │   │   ├── User.ts
+│   │   │   ├── Event.ts
+│   │   │   └── Ticket.ts
+│   │   │
+│   │   ├── controllers/
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── event.controller.ts
+│   │   │   └── ticket.controller.ts
+│   │   │
+│   │   ├── routes/
+│   │   │   ├── auth.routes.ts
+│   │   │   ├── event.routes.ts
+│   │   │   └── ticket.routes.ts
+│   │   │
+│   │   ├── utils/
+│   │   │   ├── qr.ts
+│   │   │   ├── token.ts
+│   │   │   ├── email.ts
+│   │   │   └── responses.ts
+│   │   │
+│   │   ├── middleware/
+│   │   │   ├── auth.ts
+│   │   │   └── error.ts
+│   │   │
+│   │   └── app.ts
+│   └── package.json
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── RegisterForm.tsx
+│   │   │   ├── EventCard.tsx
+│   │   │   └── Scanner.tsx
+│   │   │
+│   │   ├── pages/
+│   │   │   ├── Register.tsx
+│   │   │   ├── AdminDashboard.tsx
+│   │   │   └── Scan.tsx
+│   │   │
+│   │   ├── api/
+│   │   │   ├── events.ts
+│   │   │   └── tickets.ts
+│   │   │
+│   │   └── App.tsx
+│   └── package.json
+│
+└── README.md
+
