@@ -11,6 +11,7 @@ import FaqsPage from "./pages/FaqsPage";
 import ContactPage from "./pages/ContactPage";
 import EventDetailsPage from "./pages/EventDetailsPage";
 import TicketPage from "./pages/TicketPage";
+import QRScannerPage from "./pages/QRScannerPage";
 
 function App() {
   return (
@@ -28,6 +29,9 @@ function App() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/event/:id" element={<EventDetailsPage />} />
         <Route path="/ticket/:id" element={<TicketPage />} />
+
+        {/* Volunteer / Scanner */}
+        <Route path="/scanner" element={<QRScannerPage />} />
 
         {/* Organizer / Admin */}
         <Route path="/admin" element={<AdminDashboard />} />
