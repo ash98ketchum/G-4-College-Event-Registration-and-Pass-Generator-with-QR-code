@@ -43,7 +43,7 @@ const LandingPage = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/admin")}
+            onClick={() => navigate("/login")}
             className="px-6 py-3 rounded-xl backdrop-blur-xl bg-white/70 border border-[#F5E7C6] text-[#222222] font-medium hover:bg-white transition-all"
           >
             Sign In
@@ -81,31 +81,31 @@ const LandingPage = () => {
               </p>
 
               <div className="flex flex-wrap gap-4">
-                {/* USER → USER DASHBOARD */}
+                {/* USER → LOGIN/REGISTER */}
                 <motion.button
                   whileHover={{
                     scale: 1.05,
                     boxShadow: "0 0 40px rgba(255,109,31,0.6)",
                   }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate("/user")}
+                  onClick={() => navigate("/login")}
                   className="group px-8 py-4 bg-gradient-to-r from-[#FF6D1F] via-[#FF9148] to-[#222222] 
                   rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-[#FF6D1F80] 
                   transition-all flex items-center gap-2"
                 >
-                  Register Now
+                  Get Started
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </motion.button>
 
-                {/* ORGANIZER → ADMIN DASHBOARD */}
+                {/* BROWSE EVENTS */}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate("/admin")}
+                  onClick={() => navigate("/events")}
                   className="px-8 py-4 backdrop-blur-xl bg-white/70 border border-[#F5E7C6] 
                   rounded-xl text-[#222222] font-bold text-lg hover:bg-white transition-all"
                 >
-                  Organizer Dashboard
+                  Browse Events
                 </motion.button>
               </div>
             </motion.div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ticketAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 interface Ticket {
   _id: string;
@@ -26,19 +27,22 @@ interface Ticket {
 
 const MyTicketsPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    loadTickets();
-  }, []);
+    if (user) {
+      loadTickets();
+    }
+  }, [user]);
 
   const loadTickets = async () => {
+    if (!user) return;
+    
     try {
-      // Get current user - in production, get this from auth context
-      const currentUser = localStorage.getItem('userId') || 'demo-user-id';
-      const result = await ticketAPI.getUserTickets(currentUser);
+      const result = await ticketAPI.getUserTickets(user.id);
       
       if (result.tickets) {
         setTickets(result.tickets);

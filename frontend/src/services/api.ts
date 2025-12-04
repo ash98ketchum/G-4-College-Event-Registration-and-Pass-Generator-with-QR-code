@@ -7,6 +7,15 @@ interface ApiResponse<T> {
   error?: string;
 }
 
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+};
+
 // Auth APIs
 export const authAPI = {
   login: async (email: string, password: string) => {
@@ -14,24 +23,22 @@ export const authAPI = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
-      credentials: 'include',
     });
     return response.json();
   },
 
-  register: async (userData: { name: string; email: string; password: string; college?: string; phone?: string }) => {
+  register: async (userData: { name: string; email: string; password: string; college?: string; phone?: string; role?: string }) => {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData),
-      credentials: 'include',
     });
     return response.json();
   },
 
   getCurrentUser: async () => {
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
-      credentials: 'include',
+      headers: getAuthHeaders(),
     });
     return response.json();
   },
@@ -59,9 +66,8 @@ export const eventAPI = {
   }) => {
     const response = await fetch(`${API_BASE_URL}/events`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(eventData),
-      credentials: 'include',
     });
     return response.json();
   },
@@ -76,9 +82,8 @@ export const eventAPI = {
   }) => {
     const response = await fetch(`${API_BASE_URL}/events/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(eventData),
-      credentials: 'include',
     });
     return response.json();
   },
@@ -86,14 +91,14 @@ export const eventAPI = {
   deleteEvent: async (id: string) => {
     const response = await fetch(`${API_BASE_URL}/events/${id}`, {
       method: 'DELETE',
-      credentials: 'include',
+      headers: getAuthHeaders(),
     });
     return response.json();
   },
 
   getEventStats: async (id: string) => {
     const response = await fetch(`${API_BASE_URL}/events/${id}/stats`, {
-      credentials: 'include',
+      headers: getAuthHeaders(),
     });
     return response.json();
   },
@@ -104,23 +109,22 @@ export const ticketAPI = {
   createTicket: async (userId: string, eventId: string) => {
     const response = await fetch(`${API_BASE_URL}/tickets/create`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ userId, eventId }),
-      credentials: 'include',
     });
     return response.json();
   },
 
   getUserTickets: async (userId: string) => {
     const response = await fetch(`${API_BASE_URL}/tickets/user/${userId}`, {
-      credentials: 'include',
+      headers: getAuthHeaders(),
     });
     return response.json();
   },
 
   getTicketById: async (ticketId: string) => {
     const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}`, {
-      credentials: 'include',
+      headers: getAuthHeaders(),
     });
     return response.json();
   },

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import {
   Home,
   CalendarDays,
@@ -15,57 +16,94 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import PremiumCalendar, { CalendarEvent } from "../components/Calender";
+import { eventAPI, ticketAPI } from "../services/api";
 
-interface RecommendedEvent {
-  id: number;
-  name: string;
-  date: string;
-  city: string;
-  rating: number;
+interface Event {
+  _id: string;
+  title: string;
+  description?: string;
   price: number;
-  paid: boolean;
+  capacity: number;
+  registrations: number;
+  startDate?: string;
+  endDate?: string;
+  createdAt: string;
+}
+
+interface UserTicket {
+  _id: string;
+  eventId: string;
+  userId: string;
+  tid: string;
+  qrData: string;
+  scanned: boolean;
+  issuedAt: string;
 }
 
 const UserDashboard = () => {
   const navigate = useNavigate();
-  const userName = "Anirudh";
+  const { user, logout } = useAuth();
+  const userName = user?.name || "User";
 
+  const [events, setEvents] = useState<Event[]>([]);
+  const [userTickets, setUserTickets] = useState<UserTicket[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch events and user tickets
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [eventsResponse, ticketsResponse] = await Promise.all([
+          eventAPI.getAllEvents(),
+          user?.id ? ticketAPI.getUserTickets(user.id) : Promise.resolve({ data: [] }),
+        ]);
+        
+        if (eventsResponse.data) {
+          setEvents(eventsResponse.data);
+        }
+        if (ticketsResponse.data) {
+          setUserTickets(ticketsResponse.data);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
+
+  // Calculate stats from real data
   const stats = {
-    ticketsPurchased: 2,
-    upcomingEvents: 4,
-    citiesVisited: 5,
+    ticketsPurchased: userTickets.length,
+    upcomingEvents: events.filter(e => !e.endDate || new Date(e.endDate) > new Date()).length,
+    citiesVisited: new Set(userTickets.map(t => 'Event')).size,
   };
 
-  const recommendedEvents: RecommendedEvent[] = [
-    {
-      id: 1,
-      name: "Tech Summit 2024",
-      date: "2025-12-04",
-      city: "Bangalore",
-      rating: 4.8,
-      price: 299,
-      paid: false,
-    },
-    {
-      id: 2,
-      name: "Music Fiesta",
-      date: "2025-12-18",
-      city: "Mumbai",
-      rating: 4.9,
-      price: 149,
-      paid: true,
-    },
-  ];
+  // Get recommended events (events not yet purchased)
+  const recommendedEvents = events
+    .filter(e => !userTickets.some(t => t.eventId === e._id))
+    .slice(0, 4);
 
-  const eventDates: CalendarEvent[] = [
-    { date: "2025-12-04", title: "Tech Summit" },
-    { date: "2025-12-18", title: "Music Fiesta" },
-    { date: "2025-12-25", title: "Christmas Expo" },
-  ];
+  // Generate calendar events from all events
+  const eventDates: CalendarEvent[] = events
+    .filter(e => e.startDate)
+    .map(e => ({
+      date: e.startDate!.split('T')[0],
+      title: e.title,
+    }));
 
   const progress = 50; // happiness %
-  const stars = 0; // star loops
+  const stars = userTickets.length; // star loops based on tickets
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#FAF3E1] to-[#F5E7C6] text-[#222222]">
@@ -154,7 +192,7 @@ const UserDashboard = () => {
             </button>
 
             <button
-              onClick={() => navigate("/")}
+              onClick={handleLogout}
               className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-100 text-red-600 shadow mt-6 w-full"
             >
               <LogOut className="w-5 h-5" />
@@ -209,32 +247,49 @@ const UserDashboard = () => {
             {/* LEFT SIDE */}
             <div className="lg:col-span-2 space-y-10">
               <h2 className="text-3xl font-bold">Recommended For You</h2>
-              <div className="grid md:grid-cols-2 gap-6">
-                {recommendedEvents.map((e) => (
-                  <EventCard key={e.id} event={e} navigate={navigate} />
-                ))}
-              </div>
+              {loading ? (
+                <div className="text-center py-8 text-[#777]">Loading events...</div>
+              ) : recommendedEvents.length === 0 ? (
+                <div className="text-center py-8 text-[#777]">
+                  No events available. Check back later!
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-6">
+                  {recommendedEvents.map((e) => (
+                    <EventCard key={e._id} event={e} navigate={navigate} userTickets={userTickets} />
+                  ))}
+                </div>
+              )}
 
               <h2 className="text-3xl font-bold mt-10">Upcoming Events</h2>
-              <div className="space-y-4">
-                {eventDates.map((ed, i) => (
-                  <div
-                    key={i}
-                    className="p-5 bg-white/80 shadow rounded-2xl flex items-center justify-between"
-                  >
-                    <div>
-                      <p className="font-bold text-lg">{ed.title}</p>
-                      <p className="text-[#777]">{ed.date}</p>
-                    </div>
-                    <ArrowRight
-                      className="w-6 h-6 text-[#FF6D1F] cursor-pointer"
-                      onClick={() =>
-                        navigate(`/event/${ed.title.toLowerCase().replace(/\s+/g, "-")}`)
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
+              {loading ? (
+                <div className="text-center py-8 text-[#777]">Loading...</div>
+              ) : eventDates.length === 0 ? (
+                <div className="text-center py-8 text-[#777]">
+                  No upcoming events scheduled.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {eventDates.slice(0, 5).map((ed, i) => {
+                    const event = events.find(e => e.title === ed.title);
+                    return (
+                      <div
+                        key={i}
+                        className="p-5 bg-white/80 shadow rounded-2xl flex items-center justify-between"
+                      >
+                        <div>
+                          <p className="font-bold text-lg">{ed.title}</p>
+                          <p className="text-[#777]">{ed.date}</p>
+                        </div>
+                        <ArrowRight
+                          className="w-6 h-6 text-[#FF6D1F] cursor-pointer"
+                          onClick={() => event && navigate(`/event/${event._id}`)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* RIGHT SIDE: Calendar */}
@@ -274,29 +329,43 @@ const StatCard = ({ title, value, icon: Icon }: StatCardProps) => (
 );
 
 interface EventCardProps {
-  event: RecommendedEvent;
+  event: Event;
   navigate: ReturnType<typeof useNavigate>;
+  userTickets: UserTicket[];
 }
 
-const EventCard = ({ event, navigate }: EventCardProps) => (
-  <motion.div whileHover={{ scale: 1.02 }} className="p-6 bg-white/80 rounded-3xl shadow-xl">
-    <h3 className="text-xl font-bold">{event.name}</h3>
-    <p className="mt-2 text-[#777]">📅 {event.date}</p>
-    <p className="text-[#777]">📍 {event.city}</p>
-    <p className="text-[#FF6D1F] mt-1 flex items-center gap-1">
-      <Star className="w-4 h-4" /> {event.rating}
-    </p>
-    <p className="text-xl font-semibold mt-2">₹{event.price}</p>
+const EventCard = ({ event, navigate, userTickets }: EventCardProps) => {
+  const hasPurchased = userTickets.some(t => t.eventId === event._id);
+  const availableSeats = event.capacity - (event.registrations || 0);
+  const formattedDate = event.startDate 
+    ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : 'TBA';
 
-    <button
-      onClick={() =>
-        event.paid ? navigate(`/ticket/${event.id}`) : navigate(`/event/${event.id}`)
-      }
-      className="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-[#FF6D1F] to-[#222] text-white font-bold shadow hover:opacity-90"
-    >
-      {event.paid ? "View Ticket" : "Buy Ticket"}
-    </button>
-  </motion.div>
-);
+  return (
+    <motion.div whileHover={{ scale: 1.02 }} className="p-6 bg-white/80 rounded-3xl shadow-xl">
+      <h3 className="text-xl font-bold">{event.title}</h3>
+      <p className="mt-2 text-[#777] line-clamp-2">{event.description || 'No description'}</p>
+      <p className="mt-2 text-[#777]">📅 {formattedDate}</p>
+      <p className="text-[#777]">🎫 {availableSeats} seats available</p>
+      <p className="text-[#FF6D1F] mt-1 flex items-center gap-1">
+        <Star className="w-4 h-4 fill-current" /> 4.5
+      </p>
+      <p className="text-xl font-semibold mt-2">
+        {event.price === 0 ? 'Free' : `$${event.price}`}
+      </p>
+
+      <button
+        onClick={() =>
+          hasPurchased 
+            ? navigate('/tickets')
+            : navigate(`/event/${event._id}`)
+        }
+        className="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-[#FF6D1F] to-[#222] text-white font-bold shadow hover:opacity-90"
+      >
+        {hasPurchased ? "View Ticket" : "Buy Ticket"}
+      </button>
+    </motion.div>
+  );
+};
 
 export default UserDashboard;
