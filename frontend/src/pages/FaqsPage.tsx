@@ -7,3 +7,4 @@ const FaqsPage = () => {
 };
 
 export default FaqsPage;
+
