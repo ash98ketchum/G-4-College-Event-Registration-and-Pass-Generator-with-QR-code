@@ -54,6 +54,47 @@ export const createTicket = async (req: Request, res: Response) => {
 };
 
 /**
+ * Get user tickets: expects userId param
+ * Returns all tickets for a specific user with populated event and user data
+ */
+export const getUserTickets = async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  if (!userId) return res.status(400).json({ message: 'userId required' });
+
+  try {
+    const tickets = await Ticket.find({ userId })
+      .populate('eventId')
+      .populate('userId')
+      .sort({ issuedAt: -1 });
+
+    return res.json({ tickets });
+  } catch (err) {
+    return res.status(500).json({ message: 'Failed to fetch tickets', error: err });
+  }
+};
+
+/**
+ * Get single ticket by ID: expects ticketId param
+ * Returns a single ticket with populated event and user data
+ */
+export const getTicketById = async (req: Request, res: Response) => {
+  const { ticketId } = req.params;
+  if (!ticketId) return res.status(400).json({ message: 'ticketId required' });
+
+  try {
+    const ticket = await Ticket.findById(ticketId)
+      .populate('eventId')
+      .populate('userId');
+
+    if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
+
+    return res.json({ ticket });
+  } catch (err) {
+    return res.status(500).json({ message: 'Failed to fetch ticket', error: err });
+  }
+};
+
+/**
  * Validate scan: expects { token }
  * Verifies token signature, finds ticket by tid, checks scanned flag.
  */
