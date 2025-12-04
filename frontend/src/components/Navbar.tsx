@@ -1,7 +1,19 @@
 import { motion } from 'framer-motion';
-import { Bell, Search, User } from 'lucide-react';
+import { Bell, Search, User, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 
 const Navbar = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
   return (
     <motion.nav
       initial={{ y: -20, opacity: 0 }}
@@ -30,20 +42,39 @@ const Navbar = () => {
           <span className="absolute top-2 right-2 w-2 h-2 bg-[#FF6D1F] rounded-full animate-pulse" />
         </motion.button>
 
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/80 hover:bg-white transition-colors cursor-pointer border border-[#F5E7C6]"
-        >
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FF6D1F] to-[#222222] flex items-center justify-center">
-            <User className="w-4 h-4 text-[#FAF3E1]" />
-          </div>
-          <div className="text-sm">
-            <p className="text-[#222222] font-medium">Admin User</p>
-            <p className="text-[#777777] text-xs">
-              admin@eventpass.com
-            </p>
-          </div>
-        </motion.div>
+        <div className="relative">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/80 hover:bg-white transition-colors cursor-pointer border border-[#F5E7C6]"
+          >
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FF6D1F] to-[#222222] flex items-center justify-center">
+              <User className="w-4 h-4 text-[#FAF3E1]" />
+            </div>
+            <div className="text-sm">
+              <p className="text-[#222222] font-medium">{user?.name || 'User'}</p>
+              <p className="text-[#777777] text-xs">
+                {user?.email || 'user@eventpass.com'}
+              </p>
+            </div>
+          </motion.div>
+
+          {showDropdown && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute right-0 mt-2 w-48 backdrop-blur-xl bg-white/95 border border-[#F5E7C6] rounded-xl shadow-xl overflow-hidden z-50"
+            >
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#FAF3E1] transition-colors text-red-600"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="font-medium">Logout</span>
+              </button>
+            </motion.div>
+          )}
+        </div>
       </div>
     </motion.nav>
   );

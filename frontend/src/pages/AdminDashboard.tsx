@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import {
   Users,
   CheckCircle,
@@ -8,77 +9,105 @@ import {
   Edit,
   Trash2,
   Eye,
+  X,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import StatCard from '../components/StatCard';
 import FloatingOrbs from '../components/FloatingOrbs';
+import { eventAPI } from '../services/api';
+
+interface Event {
+  _id: string;
+  title: string;
+  description?: string;
+  price: number;
+  capacity: number;
+  registrations: number;
+  startDate?: string;
+  endDate?: string;
+  createdAt: string;
+}
 
 const AdminDashboard = () => {
-  const events = [
-    {
-      id: 1,
-      name: 'Tech Summit 2024',
-      price: 299,
-      limit: 1000,
-      registrations: 847,
-      checkins: 723,
-      status: 'Active',
-    },
-    {
-      id: 2,
-      name: 'Music Festival',
-      price: 149,
-      limit: 5000,
-      registrations: 4521,
-      checkins: 3892,
-      status: 'Active',
-    },
-    {
-      id: 3,
-      name: 'Business Workshop',
-      price: 199,
-      limit: 200,
-      registrations: 186,
-      checkins: 142,
-      status: 'Active',
-    },
-    {
-      id: 4,
-      name: 'Art Exhibition',
-      price: 49,
-      limit: 300,
-      registrations: 267,
-      checkins: 198,
-      status: 'Active',
-    },
-    {
-      id: 5,
-      name: 'Food & Wine Expo',
-      price: 89,
-      limit: 800,
-      registrations: 654,
-      checkins: 487,
-      status: 'Upcoming',
-    },
-  ];
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    price: 0,
+    capacity: 0,
+    startDate: '',
+    endDate: '',
+  });
+
+  // Fetch events from API
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const response = await eventAPI.getAllEvents();
+      if (response.data) {
+        setEvents(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await eventAPI.createEvent(formData);
+      if (response.data) {
+        setEvents([...events, response.data]);
+        setShowCreateModal(false);
+        setFormData({
+          title: '',
+          description: '',
+          price: 0,
+          capacity: 0,
+          startDate: '',
+          endDate: '',
+        });
+      }
+    } catch (error) {
+      console.error('Error creating event:', error);
+    }
+  };
+
+  const handleDeleteEvent = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this event?')) return;
+    try {
+      await eventAPI.deleteEvent(id);
+      setEvents(events.filter((e) => e._id !== id));
+    } catch (error) {
+      console.error('Error deleting event:', error);
+    }
+  };
 
   const totalRegistrations = events.reduce(
-    (sum, event) => sum + event.registrations,
+    (sum, event) => sum + (event.registrations || 0),
     0,
   );
   const totalCheckins = events.reduce(
-    (sum, event) => sum + event.checkins,
+    (sum, event) => sum + (event.registrations || 0),
     0,
   );
   const totalRevenue = events.reduce(
-    (sum, event) => sum + event.registrations * event.price,
+    (sum, event) => sum + (event.registrations || 0) * event.price,
     0,
   );
-  const totalCapacity = events.reduce((sum, event) => sum + event.limit, 0);
-  const capacityUsed = Math.round(
+  const totalCapacity = events.reduce((sum, event) => sum + event.capacity, 0);
+  const capacityUsed = totalCapacity > 0 ? Math.round(
     (totalRegistrations / totalCapacity) * 100,
-  );
+  ) : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FAF3E1] via-[#F5E7C6] to-[#FF6D1F33] relative text-[#222222]">
@@ -260,6 +289,7 @@ const AdminDashboard = () => {
               </p>
             </div>
             <motion.button
+              onClick={() => setShowCreateModal(true)}
               whileHover={{
                 scale: 1.05,
                 boxShadow:
@@ -301,83 +331,242 @@ const AdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {events.map((event, index) => (
-                  <motion.tr
-                    key={event.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.7 + index * 0.05 }}
-                    className="border-b border-[#F5E7C6]/70 hover:bg-[#FAF3E1]/70 transition-colors"
-                  >
-                    <td className="p-4 text-[#222222] font-medium">
-                      {event.name}
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-[#777]">
+                      Loading events...
                     </td>
-                    <td className="p-4 text-[#555555]">
-                      ${event.price}
+                  </tr>
+                ) : events.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-[#777]">
+                      No events yet. Create your first event!
                     </td>
-                    <td className="p-4 text-[#555555]">
-                      {event.limit.toLocaleString()}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#222222] font-medium">
-                          {event.registrations}
-                        </span>
-                        <span className="text-xs text-[#777777]">
-                          (
-                          {Math.round(
-                            (event.registrations / event.limit) * 100,
-                          )}
-                          %)
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-[#555555]">
-                      {event.checkins}
-                    </td>
-                    <td className="p-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          event.status === 'Active'
-                            ? 'bg-[#FF6D1F1a] text-[#FF6D1F] border border-[#FF6D1F80]'
-                            : 'bg-[#2222220f] text-[#222222] border border-[#2222224d]'
-                        }`}
+                  </tr>
+                ) : (
+                  events.map((event, index) => {
+                    const eventStatus =
+                      event.endDate && new Date(event.endDate) < new Date()
+                        ? 'Completed'
+                        : event.startDate && new Date(event.startDate) > new Date()
+                        ? 'Upcoming'
+                        : 'Active';
+
+                    return (
+                      <motion.tr
+                        key={event._id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.7 + index * 0.05 }}
+                        className="border-b border-[#F5E7C6]/70 hover:bg-[#FAF3E1]/70 transition-colors"
                       >
-                        {event.status}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="p-2 rounded-lg bg-[#FF6D1F15] hover:bg-[#FF6D1F25] text-[#FF6D1F] transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="p-2 rounded-lg bg-[#22222210] hover:bg-[#22222220] text-[#222222] transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </motion.button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
+                        <td className="p-4 text-[#222222] font-medium">
+                          {event.title}
+                        </td>
+                        <td className="p-4 text-[#555555]">
+                          ${event.price}
+                        </td>
+                        <td className="p-4 text-[#555555]">
+                          {event.capacity.toLocaleString()}
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[#222222] font-medium">
+                              {event.registrations || 0}
+                            </span>
+                            <span className="text-xs text-[#777777]">
+                              (
+                              {Math.round(
+                                ((event.registrations || 0) / event.capacity) * 100,
+                              )}
+                              %)
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-4 text-[#555555]">
+                          {event.registrations || 0}
+                        </td>
+                        <td className="p-4">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              eventStatus === 'Active'
+                                ? 'bg-[#FF6D1F1a] text-[#FF6D1F] border border-[#FF6D1F80]'
+                                : eventStatus === 'Upcoming'
+                                ? 'bg-blue-500/10 text-blue-600 border border-blue-500/50'
+                                : 'bg-[#2222220f] text-[#222222] border border-[#2222224d]'
+                            }`}
+                          >
+                            {eventStatus}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-2">
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => window.open(`/event/${event._id}`, '_blank')}
+                              className="p-2 rounded-lg bg-[#FF6D1F15] hover:bg-[#FF6D1F25] text-[#FF6D1F] transition-colors"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => handleDeleteEvent(event._id)}
+                              className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </motion.button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
         </motion.div>
       </main>
+
+      {/* Create Event Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-[#222222]">
+                Create New Event
+              </h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="p-2 rounded-lg hover:bg-[#F5E7C6] transition-colors"
+              >
+                <X className="w-6 h-6 text-[#777]" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateEvent} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-[#222222] mb-2">
+                  Event Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
+                  className="w-full px-4 py-3 rounded-xl border border-[#F5E7C6] focus:border-[#FF6D1F] focus:ring-2 focus:ring-[#FF6D1F]/20 outline-none transition-all"
+                  placeholder="e.g., Tech Summit 2024"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#222222] mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  rows={4}
+                  className="w-full px-4 py-3 rounded-xl border border-[#F5E7C6] focus:border-[#FF6D1F] focus:ring-2 focus:ring-[#FF6D1F]/20 outline-none transition-all resize-none"
+                  placeholder="Event description, venue details, etc."
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#222222] mb-2">
+                    Price ($) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price: parseFloat(e.target.value) })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-[#F5E7C6] focus:border-[#FF6D1F] focus:ring-2 focus:ring-[#FF6D1F]/20 outline-none transition-all"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#222222] mb-2">
+                    Capacity *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    value={formData.capacity}
+                    onChange={(e) =>
+                      setFormData({ ...formData, capacity: parseInt(e.target.value) })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-[#F5E7C6] focus:border-[#FF6D1F] focus:ring-2 focus:ring-[#FF6D1F]/20 outline-none transition-all"
+                    placeholder="100"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#222222] mb-2">
+                    Start Date
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={formData.startDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, startDate: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-[#F5E7C6] focus:border-[#FF6D1F] focus:ring-2 focus:ring-[#FF6D1F]/20 outline-none transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#222222] mb-2">
+                    End Date
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={formData.endDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, endDate: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-[#F5E7C6] focus:border-[#FF6D1F] focus:ring-2 focus:ring-[#FF6D1F]/20 outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 px-6 py-3 rounded-xl border border-[#F5E7C6] text-[#777] hover:bg-[#F5E7C6] transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-[#FF6D1F] to-[#FF9148] text-white font-bold hover:opacity-90 transition-opacity shadow-lg"
+                >
+                  Create Event
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
