@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 import {
   QrCode,
   CreditCard,
@@ -6,20 +6,20 @@ import {
   BarChart3,
   ArrowRight,
   Sparkles,
-} from 'lucide-react';
-import FloatingOrbs from '../components/FloatingOrbs';
-import FeatureCard from '../components/FeatureCard';
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import FloatingOrbs from "../components/FloatingOrbs";
+import FeatureCard from "../components/FeatureCard";
 
-interface LandingPageProps {
-  onNavigate: (page: string) => void;
-}
+const LandingPage = () => {
+  const navigate = useNavigate();
 
-const LandingPage = ({ onNavigate }: LandingPageProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FAF3E1] via-[#F5E7C6] to-[#FF6D1F33] overflow-hidden text-[#222222]">
       <FloatingOrbs />
 
       <div className="relative z-10">
+        {/* NAVBAR */}
         <motion.nav
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -29,15 +29,12 @@ const LandingPage = ({ onNavigate }: LandingPageProps) => {
           <div className="flex items-center gap-2">
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{
-                duration: 20,
-                repeat: Infinity,
-                ease: 'linear',
-              }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
               className="w-10 h-10 bg-gradient-to-br from-[#FF6D1F] to-[#222222] rounded-xl flex items-center justify-center"
             >
               <Sparkles className="w-6 h-6 text-[#FAF3E1]" />
             </motion.div>
+
             <h1 className="text-2xl font-bold bg-gradient-to-r from-[#FF6D1F] via-[#FF9148] to-[#222222] bg-clip-text text-transparent">
               EventPass
             </h1>
@@ -46,13 +43,14 @@ const LandingPage = ({ onNavigate }: LandingPageProps) => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => onNavigate('dashboard')}
+            onClick={() => navigate("/admin")}
             className="px-6 py-3 rounded-xl backdrop-blur-xl bg-white/70 border border-[#F5E7C6] text-[#222222] font-medium hover:bg-white transition-all"
           >
             Sign In
           </motion.button>
         </motion.nav>
 
+        {/* HERO */}
         <section className="container mx-auto px-6 py-20 grid lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-100px)]">
           <div>
             <motion.div
@@ -70,39 +68,42 @@ const LandingPage = ({ onNavigate }: LandingPageProps) => {
               </motion.span>
 
               <h2 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-                Manage Events.{' '}
+                Manage Events.{" "}
                 <span className="bg-gradient-to-r from-[#FF6D1F] via-[#FF9148] to-[#222222] bg-clip-text text-transparent">
                   Scan Tickets.
-                </span>{' '}
+                </span>{" "}
                 Automate Everything.
               </h2>
 
               <p className="text-xl text-[#555555] mb-10 leading-relaxed">
-                Smart pass system with secure QR entry and real-time
-                analytics. Transform your event experience with
-                cutting-edge technology.
+                Smart pass system with secure QR entry and real-time analytics.
+                Transform your event experience with cutting-edge technology.
               </p>
 
               <div className="flex flex-wrap gap-4">
+                {/* USER → USER DASHBOARD */}
                 <motion.button
                   whileHover={{
                     scale: 1.05,
-                    boxShadow:
-                      '0 0 40px rgba(255,109,31,0.6)',
+                    boxShadow: "0 0 40px rgba(255,109,31,0.6)",
                   }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => onNavigate('dashboard')}
-                  className="group px-8 py-4 bg-gradient-to-r from-[#FF6D1F] via-[#FF9148] to-[#222222] rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-[#FF6D1F80] transition-all flex items-center gap-2"
+                  onClick={() => navigate("/user")}
+                  className="group px-8 py-4 bg-gradient-to-r from-[#FF6D1F] via-[#FF9148] to-[#222222] 
+                  rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-[#FF6D1F80] 
+                  transition-all flex items-center gap-2"
                 >
                   Register Now
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </motion.button>
 
+                {/* ORGANIZER → ADMIN DASHBOARD */}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => onNavigate('dashboard')}
-                  className="px-8 py-4 backdrop-blur-xl bg-white/70 border border-[#F5E7C6] rounded-xl text-[#222222] font-bold text-lg hover:bg-white transition-all"
+                  onClick={() => navigate("/admin")}
+                  className="px-8 py-4 backdrop-blur-xl bg-white/70 border border-[#F5E7C6] 
+                  rounded-xl text-[#222222] font-bold text-lg hover:bg-white transition-all"
                 >
                   Organizer Dashboard
                 </motion.button>
@@ -110,6 +111,7 @@ const LandingPage = ({ onNavigate }: LandingPageProps) => {
             </motion.div>
           </div>
 
+          {/* RIGHT HERO CARD */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -117,31 +119,17 @@ const LandingPage = ({ onNavigate }: LandingPageProps) => {
             className="relative"
           >
             <motion.div
-              animate={{
-                y: [0, -20, 0],
-                rotate: [0, 5, 0],
-              }}
-              transition={{
-                duration: 6,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
+              animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
               className="relative z-10"
             >
               <div className="backdrop-blur-xl bg-white/80 rounded-3xl border border-[#F5E7C6] p-8 shadow-2xl">
                 <motion.div
                   animate={{ rotate: [0, 360] }}
-                  transition={{
-                    duration: 20,
-                    repeat: Infinity,
-                    ease: 'linear',
-                  }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                   className="w-64 h-64 mx-auto bg-[#FAF3E1] rounded-2xl p-6 shadow-xl"
                 >
-                  <QrCode
-                    className="w-full h-full text-[#222222]"
-                    strokeWidth={1}
-                  />
+                  <QrCode className="w-full h-full text-[#222222]" strokeWidth={1} />
                 </motion.div>
 
                 <div className="mt-6 space-y-3">
@@ -154,13 +142,12 @@ const LandingPage = ({ onNavigate }: LandingPageProps) => {
                     </span>
                   </div>
                   <div className="flex items-center justify-between backdrop-blur-xl bg-white/80 rounded-xl p-4 border border-[#F5E7C6]">
-                    <span className="text-[#777777]">
-                      Ticket ID: #TKT-12345
-                    </span>
+                    <span className="text-[#777777]">Ticket ID: #TKT-12345</span>
                   </div>
                 </div>
               </div>
 
+              {/* Floating cards */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -169,13 +156,9 @@ const LandingPage = ({ onNavigate }: LandingPageProps) => {
               >
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-3 h-3 bg-[#34D399] rounded-full animate-pulse" />
-                  <span className="font-bold text-[#222222]">
-                    Check-in Success
-                  </span>
+                  <span className="font-bold text-[#222222]">Check-in Success</span>
                 </div>
-                <p className="text-[#777777] text-sm">
-                  Verified at 14:32 PM
-                </p>
+                <p className="text-[#777777] text-sm">Verified at 14:32 PM</p>
               </motion.div>
 
               <motion.div
@@ -186,21 +169,17 @@ const LandingPage = ({ onNavigate }: LandingPageProps) => {
               >
                 <div className="flex items-center gap-3 mb-3">
                   <BarChart3 className="w-5 h-5 text-[#FF6D1F]" />
-                  <span className="font-bold text-[#222222]">
-                    Live Stats
-                  </span>
+                  <span className="font-bold text-[#222222]">Live Stats</span>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-[#777777]">Check-ins</span>
-                    <span className="font-bold text-[#222222]">
-                      847/1000
-                    </span>
+                    <span className="font-bold text-[#222222]">847/1000</span>
                   </div>
                   <div className="w-full h-2 bg-[#F5E7C6] rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: '84.7%' }}
+                      animate={{ width: "84.7%" }}
                       transition={{ duration: 1.5, delay: 1 }}
                       className="h-full bg-gradient-to-r from-[#FF6D1F] to-[#222222]"
                     />
@@ -213,23 +192,22 @@ const LandingPage = ({ onNavigate }: LandingPageProps) => {
           </motion.div>
         </section>
 
+        {/* FEATURES */}
         <section className="container mx-auto px-6 py-20">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
             <h3 className="text-4xl lg:text-5xl font-bold mb-4">
-              Powerful Features for{' '}
+              Powerful Features for{" "}
               <span className="bg-gradient-to-r from-[#FF6D1F] via-[#FF9148] to-[#222222] bg-clip-text text-transparent">
                 Modern Events
               </span>
             </h3>
             <p className="text-xl text-[#555555] max-w-2xl mx-auto">
-              Everything you need to create, manage, and scale your
-              events seamlessly
+              Everything you need to create, manage, and scale your events seamlessly
             </p>
           </motion.div>
 
@@ -261,43 +239,32 @@ const LandingPage = ({ onNavigate }: LandingPageProps) => {
           </div>
         </section>
 
+        {/* CTA */}
         <motion.section
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
           className="container mx-auto px-6 py-20"
         >
           <div className="backdrop-blur-xl bg-gradient-to-r from-[#FAF3E1] via-[#F5E7C6] to-[#FF6D1F33] border border-[#F5E7C6] rounded-3xl p-12 text-center relative overflow-hidden shadow-xl">
             <motion.div
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.3, 0.5, 0.3],
-              }}
-              transition={{
-                duration: 8,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
+              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
               className="absolute inset-0 bg-gradient-to-br from-[#FF6D1F33] to-[#22222222] blur-3xl"
             />
-
             <div className="relative z-10">
               <h3 className="text-4xl font-bold mb-4 text-[#222222]">
                 Ready to Transform Your Events?
               </h3>
               <p className="text-xl text-[#555555] mb-8 max-w-2xl mx-auto">
-                Join thousands of organizers who trust EventPass for
-                their event management needs
+                Join thousands of organizers who trust EventPass for their event management needs
               </p>
               <motion.button
-                whileHover={{
-                  scale: 1.05,
-                  boxShadow:
-                    '0 0 50px rgba(255,109,31,0.8)',
-                }}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 50px rgba(255,109,31,0.8)" }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => onNavigate('dashboard')}
-                className="px-10 py-5 bg-gradient-to-r from-[#FF6D1F] via-[#FF9148] to-[#222222] rounded-xl text-white font-bold text-lg shadow-2xl hover:shadow-[#FF6D1F80] transition-all inline-flex items-center gap-2"
+                onClick={() => navigate("/admin")}
+                className="px-10 py-5 bg-gradient-to-r from-[#FF6D1F] via-[#FF9148] to-[#222222] 
+                rounded-xl text-white font-bold text-lg shadow-2xl hover:shadow-[#FF6D1F80] transition-all inline-flex items-center gap-2"
               >
                 Get Started Now
                 <ArrowRight className="w-5 h-5" />
@@ -308,8 +275,7 @@ const LandingPage = ({ onNavigate }: LandingPageProps) => {
 
         <footer className="container mx-auto px-6 py-12 text-center">
           <p className="text-[#777777]">
-            &copy; 2024 EventPass. All rights reserved. Built with
-            passion for seamless events.
+            © 2024 EventPass. All rights reserved. Built with passion for seamless events.
           </p>
         </footer>
       </div>
