@@ -91,3 +91,63 @@ event-system/
 │
 └── README.md
 
+
+Flow of Project
+          ┌──────────┐
+          │  Sign Up  │
+          └─────┬────┘
+                │
+                ▼
+          ┌──────────┐
+          │   Login   │
+          └─────┬────┘
+                │
+                ▼
+      ┌───────────────────────────────┐
+      │           Home Page           │
+      │  (User registers from here)   │
+      └───────────┬───────────────────┘
+                  │
+                  ▼
+      ┌───────────────────────────────┐
+      │   List of Many Events         │
+      │  (User clicks any event)      │
+      └───────────┬───────────────────┘
+                  │
+                  ▼
+      ┌───────────────────────────────┐
+      │     Event Details Page        │
+      │ Info + Rules + Date + Price   │
+      │       BUY PASS Button         │
+      └───────────┬───────────────────┘
+                  │
+                  ▼
+      ┌───────────────────────────────┐
+      │     Payment QR is shown       │
+      │   (User scans QR and pays)    │
+      └───────────┬───────────────────┘
+                  │
+                  ▼
+      ┌───────────────────────────────┐
+      │   Payment Successful          │
+      │ Final Entry Pass is created   │
+      │     (QR Code generated)       │
+      └───────────┬───────────────────┘
+                  │
+                  ▼
+      ┌───────────────────────────────┐
+      │ Back to Home → "My Passes"    │
+      │   User sees their QR Ticket   │
+      └───────────┬───────────────────┘
+                  │
+                  ▼
+      ┌───────────────────────────────┐
+      │ View Pass (Final QR Code)     │
+      │    + Download Pass Button     │
+      └───────────┬───────────────────┘
+                  │
+                  ▼
+      ┌───────────────────────────────┐
+      │   User Downloads the Pass     │
+      └───────────────────────────────┘
+
