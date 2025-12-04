@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { eventAPI, ticketAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 interface Event {
   _id: string;
@@ -17,6 +18,7 @@ interface Event {
 const EventDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
   
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,11 +57,10 @@ const EventDetailsPage = () => {
   const handlePurchaseTicket = async () => {
     if (!event) return;
 
-    // Get current user from localStorage (in production, use proper auth context)
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
+    // Check if user is authenticated
+    if (!isAuthenticated || !user) {
       alert('Please login to purchase tickets');
-      navigate('/');
+      navigate('/login', { state: { from: location } });
       return;
     }
 
@@ -67,7 +68,7 @@ const EventDetailsPage = () => {
     setError('');
 
     try {
-      const result = await ticketAPI.createTicket(userId, event._id);
+      const result = await ticketAPI.createTicket(user.id, event._id);
       
       if (result.ticket) {
         alert('Ticket purchased successfully! Check your tickets page.');
