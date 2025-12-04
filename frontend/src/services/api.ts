@@ -48,6 +48,55 @@ export const eventAPI = {
     const response = await fetch(`${API_BASE_URL}/events/${id}`);
     return response.json();
   },
+
+  createEvent: async (eventData: {
+    title: string;
+    description?: string;
+    price: number;
+    capacity: number;
+    startDate?: string;
+    endDate?: string;
+  }) => {
+    const response = await fetch(`${API_BASE_URL}/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(eventData),
+      credentials: 'include',
+    });
+    return response.json();
+  },
+
+  updateEvent: async (id: string, eventData: {
+    title?: string;
+    description?: string;
+    price?: number;
+    capacity?: number;
+    startDate?: string;
+    endDate?: string;
+  }) => {
+    const response = await fetch(`${API_BASE_URL}/events/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(eventData),
+      credentials: 'include',
+    });
+    return response.json();
+  },
+
+  deleteEvent: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/events/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    return response.json();
+  },
+
+  getEventStats: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/events/${id}/stats`, {
+      credentials: 'include',
+    });
+    return response.json();
+  },
 };
 
 // Ticket APIs
