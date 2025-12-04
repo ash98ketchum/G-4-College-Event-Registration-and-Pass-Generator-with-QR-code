@@ -1,353 +1,139 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { eventAPI, ticketAPI } from '../services/api';
+import React from "react";
 
-interface Event {
-  _id: string;
-  title: string;
-  description?: string;
-  price: number;
-  capacity: number;
-  registrations: number;
-  startDate?: string;
-  endDate?: string;
-  createdAt: string;
-}
+const events = [
+  {
+    id: 1,
+    title: "Tech Hackathon",
+    description:
+      "A 24-hour coding marathon where students solve real-world problems using innovative software and hardware solutions. Participants showcase creativity, teamwork, algorithms, UI/UX design, and problem-solving skills. Winners receive certificates, cash prizes, and internship opportunities.",
+    ticketType: "Paid / Free (based on sponsorship)",
+    seatLimit: 100,
+    qrUsage:
+      "Each participant receives a unique QR code for secure entry into the hackathon venue.",
+    analytics:
+      "Track participant count, team progress, check-ins per hour, and challenge completion rate.",
+    image:
+      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=900&q=60",
+  },
 
-const EventDetailsPage = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  
-  const [event, setEvent] = useState<Event | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [purchasing, setPurchasing] = useState(false);
-  const [error, setError] = useState('');
-  const [stats, setStats] = useState<any>(null);
+  {
+    id: 2,
+    title: "Cultural Concert",
+    description:
+      "An energetic cultural gala featuring college bands, solo artists, dance performances, and dramatic showcases. Enjoy a night full of music, lights, and entertainment with premium audio-visual effects.",
+    ticketType: "Paid",
+    seatLimit: 500,
+    qrUsage:
+      "Attendees scan their QR tickets at entry gates. Duplicate and fake passes are automatically flagged.",
+    analytics:
+      "Track total footfall, VIP vs Regular entries, crowd flow, and entry timing patterns.",
+    image:
+      "https://images.unsplash.com/photo-1511376777868-611b54f68947?auto=format&fit=crop&w=900&q=60",
+  },
 
-  useEffect(() => {
-    if (id) {
-      loadEventDetails();
-    }
-  }, [id]);
+  {
+    id: 3,
+    title: "Workshop on AI & Robotics",
+    description:
+      "A hands-on training workshop covering machine learning basics, robot movement programming, sensors, Arduino, neural networks, and automation logic. Perfect for beginners and tech enthusiasts!",
+    ticketType: "Paid",
+    seatLimit: 60,
+    qrUsage:
+      "Participants receive QR badges to verify workshop registration and material access.",
+    analytics:
+      "Track attendance, workshop sessions completed, and participant engagement level.",
+    image:
+      "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=900&q=60",
+  },
+];
 
-  const loadEventDetails = async () => {
-    try {
-      const result = await eventAPI.getEventById(id!);
-      if (result.event) {
-        setEvent(result.event);
-        // Try to load stats (may fail if not authenticated)
-        try {
-          const statsResult = await eventAPI.getEventStats(id!);
-          setStats(statsResult);
-        } catch (e) {
-          // Stats not available for public users
-        }
-      } else {
-        setError('Event not found');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to load event');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePurchaseTicket = async () => {
-    if (!event) return;
-
-    // Get current user from localStorage (in production, use proper auth context)
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
-      alert('Please login to purchase tickets');
-      navigate('/');
-      return;
-    }
-
-    setPurchasing(true);
-    setError('');
-
-    try {
-      const result = await ticketAPI.createTicket(userId, event._id);
-      
-      if (result.ticket) {
-        alert('Ticket purchased successfully! Check your tickets page.');
-        navigate(`/ticket/${result.ticket._id}`);
-      } else {
-        setError(result.message || 'Failed to purchase ticket');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to purchase ticket');
-    } finally {
-      setPurchasing(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAF3E1]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#FF6D1F] mx-auto"></div>
-          <p className="mt-4 text-[#222222] text-lg">Loading event details...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error && !event) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAF3E1] p-6">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <svg
-            className="w-16 h-16 mx-auto text-red-500 mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <h2 className="text-2xl font-bold text-[#222222] mb-2">Event Not Found</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={() => navigate('/events')}
-            className="bg-[#FF6D1F] text-white px-6 py-3 rounded-lg hover:bg-[#e55d0f] transition-colors"
-          >
-            Browse Events
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!event) return null;
-
-  const availableSlots = event.capacity - event.registrations;
-  const isFull = availableSlots <= 0;
-  const eventDate = event.startDate
-    ? new Date(event.startDate).toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : 'TBA';
+const EventDetailsPage = ({ id = 1 }) => {
+  const event = events.find((e) => e.id === id);
 
   return (
-    <div className="min-h-screen bg-[#FAF3E1] py-12 px-4">
-      <div className="max-w-5xl mx-auto">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate('/events')}
-          className="mb-6 flex items-center gap-2 text-[#222222] hover:text-[#FF6D1F] transition-colors"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
-            />
-          </svg>
-          Back to Events
-        </button>
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <img src={event.image} alt={event.title} style={styles.image} />
 
-        {/* Event Header */}
-        <div className="bg-white rounded-lg shadow-xl overflow-hidden">
-          {/* Hero Section */}
-          <div className="bg-gradient-to-r from-[#FF6D1F] to-[#222222] text-white p-8 md:p-12">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h1 className="text-4xl md:text-5xl font-bold mb-4">{event.title}</h1>
-                {event.description && (
-                  <p className="text-xl text-white/90 mb-6">{event.description}</p>
-                )}
-                
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
-                    <span className="font-semibold">📅 Date:</span> {eventDate}
-                  </div>
-                  <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
-                    <span className="font-semibold">💰 Price:</span> ₹{event.price}
-                  </div>
-                  <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
-                    <span className="font-semibold">👥 Capacity:</span> {event.capacity}
-                  </div>
-                </div>
-              </div>
-              
-              {isFull && (
-                <div className="bg-red-500 text-white px-6 py-3 rounded-lg font-bold">
-                  SOLD OUT
-                </div>
-              )}
-            </div>
-          </div>
+        <h1 style={styles.title}>{event.title}</h1>
 
-          {/* Event Details */}
-          <div className="p-8 md:p-12">
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
-              {/* Left Column */}
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center gap-2">
-                    <svg className="w-6 h-6 text-[#FF6D1F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Event Information
-                  </h3>
-                  <div className="space-y-3 text-gray-700">
-                    <div className="flex justify-between py-2 border-b border-[#F5E7C6]">
-                      <span className="font-semibold">Total Registrations:</span>
-                      <span>{event.registrations}</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b border-[#F5E7C6]">
-                      <span className="font-semibold">Available Slots:</span>
-                      <span className={availableSlots > 10 ? 'text-green-600' : 'text-red-600'}>
-                        {availableSlots}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b border-[#F5E7C6]">
-                      <span className="font-semibold">Event Type:</span>
-                      <span>Hackathon</span>
-                    </div>
-                    {stats && (
-                      <>
-                        <div className="flex justify-between py-2 border-b border-[#F5E7C6]">
-                          <span className="font-semibold">Total Tickets:</span>
-                          <span>{stats.totalTickets}</span>
-                        </div>
-                        <div className="flex justify-between py-2 border-b border-[#F5E7C6]">
-                          <span className="font-semibold">Checked In:</span>
-                          <span>{stats.scannedTickets}</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
+        <p style={styles.description}>{event.description}</p>
 
-                {/* Progress Bar */}
-                <div>
-                  <div className="flex justify-between mb-2 text-sm">
-                    <span className="font-semibold">Registration Progress</span>
-                    <span>{Math.round((event.registrations / event.capacity) * 100)}%</span>
-                  </div>
-                  <div className="w-full bg-[#F5E7C6] rounded-full h-4 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-[#FF6D1F] to-[#222222] h-full transition-all duration-300"
-                      style={{ width: `${Math.min((event.registrations / event.capacity) * 100, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column - Purchase Card */}
-              <div className="bg-[#FAF3E1] rounded-lg p-6 border-2 border-[#FF6D1F]">
-                <h3 className="text-2xl font-bold text-[#222222] mb-4">Register Now</h3>
-                
-                <div className="space-y-4 mb-6">
-                  <div className="flex justify-between text-lg">
-                    <span className="font-semibold">Ticket Price:</span>
-                    <span className="text-2xl font-bold text-[#FF6D1F]">₹{event.price}</span>
-                  </div>
-                  
-                  {event.price > 0 && (
-                    <>
-                      <div className="flex justify-between text-sm text-gray-600">
-                        <span>Platform Fee:</span>
-                        <span>₹0</span>
-                      </div>
-                      <div className="border-t-2 border-[#FF6D1F] pt-2 flex justify-between text-xl font-bold">
-                        <span>Total:</span>
-                        <span className="text-[#FF6D1F]">₹{event.price}</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {error && (
-                  <div className="mb-4 bg-red-100 border-2 border-red-400 text-red-700 px-4 py-3 rounded-lg text-sm">
-                    {error}
-                  </div>
-                )}
-
-                <button
-                  onClick={handlePurchaseTicket}
-                  disabled={purchasing || isFull}
-                  className={`w-full py-4 rounded-lg font-bold text-lg transition-colors ${
-                    isFull
-                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                      : 'bg-[#FF6D1F] text-white hover:bg-[#e55d0f]'
-                  } disabled:bg-gray-400`}
-                >
-                  {purchasing ? 'Processing...' : isFull ? 'Event Full' : `Purchase Ticket for ₹${event.price}`}
-                </button>
-
-                <p className="mt-4 text-xs text-gray-600 text-center">
-                  Your ticket will be generated instantly with a QR code
-                </p>
-              </div>
-            </div>
-
-            {/* What's Included */}
-            <div className="bg-[#F5E7C6] rounded-lg p-6">
-              <h3 className="text-xl font-bold text-[#222222] mb-4">What's Included:</h3>
-              <ul className="grid md:grid-cols-2 gap-3">
-                {[
-                  'Digital Hall Ticket with QR Code',
-                  'Event Entry Pass',
-                  'Certificate of Participation',
-                  'Networking Opportunities',
-                  'Learning Resources',
-                  'Refreshments',
-                ].map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-[#222222]">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+        <div style={styles.infoBox}>
+          <p><strong>🎟 Ticket Type:</strong> {event.ticketType}</p>
+          <p><strong>👥 Seat Limit:</strong> {event.seatLimit} attendees</p>
+          <p><strong>📌 QR Usage:</strong> {event.qrUsage}</p>
+          <p><strong>📊 Analytics Focus:</strong> {event.analytics}</p>
         </div>
 
-        {/* Additional Info */}
-        <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
-          <h3 className="text-xl font-bold text-[#222222] mb-4">Important Notes:</h3>
-          <ul className="space-y-2 text-gray-700">
-            <li className="flex items-start gap-2">
-              <span className="text-[#FF6D1F] font-bold">•</span>
-              <span>After purchasing, you'll receive a digital hall ticket with a unique QR code</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-[#FF6D1F] font-bold">•</span>
-              <span>Present the QR code at the venue for entry verification</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-[#FF6D1F] font-bold">•</span>
-              <span>Each ticket can only be scanned once for security</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-[#FF6D1F] font-bold">•</span>
-              <span>Please arrive 30 minutes before the event starts</span>
-            </li>
-          </ul>
-        </div>
+        <button style={styles.button}>Buy Pass</button>
       </div>
     </div>
   );
+};
+
+const styles = {
+  page: {
+    backgroundColor: "#FAF3E1",
+    minHeight: "100vh",
+    padding: "30px 0",
+    display: "flex",
+    justifyContent: "center",
+    fontFamily: "Poppins, sans-serif",
+  },
+
+  card: {
+    width: "60%",             // reduced from 80%
+    maxWidth: "650px",        // reduced from 900px
+    background: "#FFFFFF",
+    borderRadius: "14px",     // reduced from 16px
+    padding: "18px",          // reduced from 24px
+    border: "2px solid #F5E7C6",
+    boxShadow: "0 6px 15px rgba(0,0,0,0.10)",
+  },
+
+  image: {
+    width: "100%",
+    height: "200px",          // reduced from 280px
+    borderRadius: "10px",
+    objectFit: "cover",
+    marginBottom: "15px",
+  },
+
+  title: {
+    fontSize: "26px",         // reduced from 32px
+    fontWeight: "700",
+    color: "#222222",
+    marginBottom: "8px",
+  },
+
+  description: {
+    fontSize: "14.5px",       // slightly smaller
+    color: "#333",
+    lineHeight: "1.5",
+    marginBottom: "15px",
+  },
+
+  infoBox: {
+    background: "#F5E7C6",
+    padding: "12px",          // smaller padding
+    borderRadius: "10px",
+    marginBottom: "18px",
+    border: "1px solid #E2D2A8",
+    fontSize: "14px",
+  },
+
+  button: {
+    background: "#FF6D1F",
+    width: "100%",
+    padding: "10px",          // reduced from 14px
+    borderRadius: "8px",
+    border: "none",
+    fontSize: "16px",
+    fontWeight: "700",
+    color: "white",
+    cursor: "pointer",
+  },
 };
 
 export default EventDetailsPage;
