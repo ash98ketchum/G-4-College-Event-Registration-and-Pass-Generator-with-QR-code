@@ -1,14 +1,24 @@
 import { Router } from 'express';
-import { createEvent, listEvents, getEventStats } from '../controllers/event.controller';
+import { 
+  createEvent, 
+  listEvents, 
+  getEventById,
+  updateEvent,
+  deleteEvent,
+  getEventStats 
+} from '../controllers/event.controller';
 import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
-// public list
+// Public routes
 router.get('/', listEvents);
+router.get('/:id', getEventById);
 
-// protected create (for hackathon MVP you can skip requireAuth if you want)
+// Protected routes (require authentication)
 router.post('/', requireAuth, createEvent);
+router.put('/:id', requireAuth, updateEvent);
+router.delete('/:id', requireAuth, deleteEvent);
 router.get('/:id/stats', requireAuth, getEventStats);
 
 export default router;
